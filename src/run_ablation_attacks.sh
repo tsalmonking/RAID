@@ -16,6 +16,7 @@ export PYTHONPATH="${SCRIPT_DIR}:${SCRIPT_DIR}/raid:${PYTHONPATH}"
 
 # ──────────────── Configurable parameters ────────────────
 DEVICE="${1:-cuda:0}"
+OVERWRITE=1
 
 if [ "$#" -ge 2 ]; then
     shift
@@ -42,7 +43,7 @@ HELD_OUT_DETECTORS=("${ALL_DETECTORS[@]}")
 DATASET=${TEST_PATH:-data/ELSA_TEST}
 OUTPUT_DIR=${SCRIPT_DIR}/output
 SUBSET=200
-BATCH_SIZE=16
+BATCH_SIZE=8
 
 # ─────────────────────────────────────────────────────────
 
@@ -118,6 +119,7 @@ for eps in "${EPSILONS[@]}"; do
                     echo "── [$completed/$total_runs] seed=$seed eps=$eps steps=$steps alpha=$alpha held_out=$held_out ──"
 
                     echo y | python3 src/raid/attack_generate.py \
+                        --overwrite $OVERWRITE \
                         --random_start $RANDOM_START \
                         --random_seed "$seed" \
                         --models "${ENSEMBLE[@]}" \

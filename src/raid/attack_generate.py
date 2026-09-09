@@ -53,7 +53,8 @@ def main(args):
         )
         if (
             output_dir.exists()
-            and input(f"Output directory: {output_dir} exists, continue and overwrite? (y/n): ") != "y"
+            # and input(f"Output directory: {output_dir} exists, continue and overwrite? (y/n): ") != "y"
+            and not args.overwrite
         ):
             return
         output_dir.mkdir(exist_ok=True, parents=True)
@@ -67,7 +68,8 @@ def main(args):
             )
             if (
                 eval_output_dir.exists()
-                and input(f"Output directory: {eval_output_dir} exists, continue and overwrite? (y/n): ") != "y"
+                # and input(f"Output directory: {eval_output_dir} exists, continue and overwrite? (y/n): ") != "y"
+                and not args.overwrite
             ):
                 return
             eval_output_dir.mkdir(exist_ok=True, parents=True)
@@ -269,6 +271,7 @@ def main(args):
 
 def parse_args():
     parser = argparse.ArgumentParser(description="PGD Attack on Model Ensemble")
+    parser.add_argument("--overwrite", type=int, default=0, help="Set to 1 to overwrite existing results")
     parser.add_argument("--random_start", type=int, default=0, help="Whether to use random start during the initilization of PGD")
     parser.add_argument("--random_seed", type=int, help="random seed. Set only if the random start is true for PGD")
     parser.add_argument("--trained_d3", action="store_true", help="Load checkpoints trained on D3")
