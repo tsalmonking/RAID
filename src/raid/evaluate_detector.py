@@ -7,7 +7,7 @@ from pathlib import Path
 import numpy as np
 import torch
 import torchvision.transforms as tf
-from sklearn.metrics import accuracy_score, average_precision_score, roc_auc_score, f1_score
+from sklearn.metrics import accuracy_score, roc_auc_score, f1_score
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 
@@ -23,7 +23,7 @@ THRESHOLD = 0.5
 @torch.no_grad()
 def main(args):
     pprint.pp(vars(args))
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    device = torch.device(args.device if torch.cuda.is_available() else "cpu")
 
 
 
@@ -68,6 +68,7 @@ def main(args):
 
     # compute predictions
     all_predictions = []
+    all_probs = []
     all_p_labels = []
     all_labels = []
     all_logits = []
@@ -76,6 +77,7 @@ def main(args):
 
     for k, v in dataloaders.items():
         predictions = []
+        probs_list = []
         p_labels = []
         labels = []
         for idx, (images, batch_labels) in enumerate(tqdm(v, desc="Processing batches")):
@@ -83,6 +85,7 @@ def main(args):
             all_logits.extend(logits_batch.cpu().tolist())
             p_labels.extend(model.predict(images).cpu().detach())
             probs = torch.softmax(logits_batch, dim=1)[:, 1]
+            probs_list.extend(probs.cpu().tolist())
             predictions.extend((probs > THRESHOLD).int().cpu().tolist())
             labels.extend(batch_labels.cpu().detach())
 
@@ -91,14 +94,14 @@ def main(args):
         }
 
         all_predictions.extend(predictions)
+        all_probs.extend(probs_list)
         all_p_labels.extend(p_labels)
         all_labels.extend(labels)
 
     metrics['All'] = {
         "f1": f1_score(y_true=all_labels, y_pred=all_p_labels),
         "acc": accuracy_score(y_true=all_labels, y_pred=all_p_labels),
-        "auc": roc_auc_score(y_true=all_labels, y_score=all_predictions),
-        "ap": average_precision_score(y_true=all_labels, y_score=all_predictions),
+        "auc": roc_auc_score(y_true=all_labels, y_score=all_probs),
     }
 
 
@@ -122,6 +125,7 @@ def parse_args():
     parser.add_argument("--trained_d3", action="store_true", help="Load checkpoints trained on D3")
     parser.add_argument("--epsilon", type=str, default='32/255', help="Perturbation budget for PGD, used for logging")
     parser.add_argument("--model", choices=MODELS, default="wang2020")
+    parser.add_argument("--device", type=str, default="cuda:1", help="Device to run the model on")
     parser.add_argument(
         "--path-to-checkpoint",
         nargs="+",

@@ -20,7 +20,7 @@ import time
 import pickle
 
 from constants import MODELS, ENSEMBLING_STRATEGIES, ENSEMBLE_LOSSES
-from sklearn.metrics import accuracy_score, average_precision_score, roc_auc_score, f1_score
+from sklearn.metrics import accuracy_score, roc_auc_score, f1_score
 import json
 
 
@@ -30,7 +30,9 @@ THRESHOLD = 0.5
 def main(args):
     pprint.pp(vars(args))
 
-    if torch.cuda.is_available():
+    device_str = args.device[0] if isinstance(args.device, list) else args.device
+    if torch.cuda.is_available() and device_str.startswith("cuda"):
+        torch.cuda.set_device(device_str)
         torch.set_default_tensor_type('torch.cuda.FloatTensor')
     if not args.dry_run:
         output_dir = Path(
@@ -86,12 +88,14 @@ def main(args):
         device = devices[0]
     else:
         args.models = args.models[0]
-        device = torch.device(args.device if torch.cuda.is_available() else "cpu")
+        device_str = args.device[0] if isinstance(args.device, list) else args.device
+        device = torch.device(device_str if torch.cuda.is_available() else "cpu")
         model = MODELS[args.models][0](
             MODELS[args.models][1], device=device)
 
     if args.eval_model:
-        device = torch.device(args.device if torch.cuda.is_available() else "cpu")
+        device_str = args.device[0] if isinstance(args.device, list) else args.device
+        device = torch.device(device_str if torch.cuda.is_available() else "cpu")
         eval_model = MODELS[args.eval_model][0](
             MODELS[args.eval_model][1], device=device)
 
@@ -129,7 +133,7 @@ def main(args):
 
     # Create and run attack (PGD attack with Linf and CE loss)
     perturbation_model = LpPerturbationModels.LINF
-    y_target = 0 # Misclassify AIG images as real
+    y_target = None  # Untargeted attack: push away from ground truth
     epsilon = float(eval(args.epsilon))
     num_steps = args.num_steps
     step_size = args.step_size
@@ -168,6 +172,7 @@ def main(args):
 
     if args.eval_model:
         all_predictions = []
+        all_probs = []
         all_p_labels = []
         all_labels = []
         all_logits = []
@@ -197,6 +202,7 @@ def main(args):
             adv_labels_list = []
         if args.eval_model:
             predictions = []
+            probs_list = []
             p_labels = []
             labels = []
 
@@ -210,6 +216,7 @@ def main(args):
                 all_logits.extend(logits_batch.cpu().tolist())
                 p_labels.extend(eval_model.predict(adv_images_b).cpu().detach())
                 probs = torch.softmax(logits_batch, dim=1)[:, 1]
+                probs_list.extend(probs.cpu().tolist())
                 predictions.extend((probs > THRESHOLD).int().cpu().tolist())
                 labels.extend(adv_labels_b.cpu().detach())
 
@@ -225,6 +232,7 @@ def main(args):
                 "acc": accuracy_score(y_true=labels, y_pred=p_labels)
                 }
             all_predictions.extend(predictions)
+            all_probs.extend(probs_list)
             all_p_labels.extend(p_labels)
             all_labels.extend(labels)
 
@@ -239,8 +247,7 @@ def main(args):
         metrics['All'] = {
             "f1": f1_score(y_true=all_labels, y_pred=all_p_labels),
             "acc": accuracy_score(y_true=all_labels, y_pred=all_p_labels),
-            "auc": roc_auc_score(y_true=all_labels, y_score=all_predictions),
-            "ap": average_precision_score(y_true=all_labels, y_score=all_predictions),
+            "auc": roc_auc_score(y_true=all_labels, y_score=all_probs),
             }
         with open(f"{eval_output_dir}/results.json", "w") as f:
             json.dump(
