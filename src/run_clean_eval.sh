@@ -6,7 +6,7 @@ cd "$SCRIPT_DIR"
 export PYTHONPATH="${SCRIPT_DIR}:${SCRIPT_DIR}/raid:${PYTHONPATH}"
 
 MODELS=(ojha2023 corvi2023 cavia2024 chen2024_convnext chen2024_clip koutlis2024 wang2020)
-DATASET=${RAID_DATASET:-data/ELSA_TEST}
+DATASET=${TEST_PATH:-data/ELSA_TEST}
 OUTPUT_DIR=output/evaluate_detector
 DEVICE=cuda:1
 BATCH_SIZE=32

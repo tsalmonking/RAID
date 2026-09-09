@@ -5,7 +5,7 @@
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 export PYTHONPATH="${SCRIPT_DIR}:${SCRIPT_DIR}/raid:${PYTHONPATH}"
 
-DATASET=${RAID_DATASET:-data/ELSA_TEST}
+DATASET=${TEST_PATH:-data/ELSA_TEST}
 OUTPUT_DIR=${SCRIPT_DIR}/output
 SUBSET=200
 
