@@ -2,6 +2,7 @@ import argparse
 import pprint
 from pathlib import Path
 import torch
+import numpy as np
 from tqdm import tqdm
 from attacks import EnsemblePGD
 from data import get_dataloader
@@ -22,13 +23,22 @@ import pickle
 from constants import MODELS, ENSEMBLING_STRATEGIES, ENSEMBLE_LOSSES
 from sklearn.metrics import accuracy_score, roc_auc_score, f1_score
 import json
+import random
 
 
 THRESHOLD = 0.5
 
+def set_seed(seed):
+    random.seed(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed_all(seed)
+
 
 def main(args):
     pprint.pp(vars(args))
+    if args.random_start:
+        set_seed(args.random_seed)
 
     device_str = args.device[0] if isinstance(args.device, list) else args.device
     if torch.cuda.is_available() and device_str.startswith("cuda"):
@@ -147,7 +157,7 @@ def main(args):
             epsilon=epsilon,
             num_steps=num_steps,
             step_size=step_size,
-            random_start=False,
+            random_start=True if args.random_start else False,
             loss_function=ENSEMBLE_LOSSES[loss],
             y_target=y_target,
             trackers=tensorboard_tracker,
@@ -158,7 +168,7 @@ def main(args):
             epsilon=epsilon,
             num_steps=num_steps,
             step_size=step_size,
-            random_start=False,
+            random_start=True if args.random_start else False,
             y_target=y_target,
             backend=Backends.NATIVE,
             trackers=tensorboard_tracker,
@@ -259,6 +269,8 @@ def main(args):
 
 def parse_args():
     parser = argparse.ArgumentParser(description="PGD Attack on Model Ensemble")
+    parser.add_argument("--random_start", type=int, default=0, help="Whether to use random start during the initilization of PGD")
+    parser.add_argument("--random_seed", type=int, help="random seed. Set only if the random start is true for PGD")
     parser.add_argument("--trained_d3", action="store_true", help="Load checkpoints trained on D3")
     parser.add_argument("--generate", action="store_true", help="Generate adversarial tensors dataset if this flag is set")
     parser.add_argument("--generate_images", action="store_true", help="Generate adversarial images dataset if this flag is set")
