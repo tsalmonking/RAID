@@ -1,8 +1,4 @@
-"""Generate noise baselines (Gaussian / uniform) matched by L-inf norm.
-
-Saves adv_dataset.pkl in the same format as attack_generate.py so the
-evaluation pipeline can treat noise baselines identically to PGD outputs.
-"""
+"""Generate Gaussian / uniform noise baselines matched by L-inf norm."""
 import argparse
 import os
 import pickle
