@@ -16,7 +16,7 @@ export PYTHONPATH="${SCRIPT_DIR}:${SCRIPT_DIR}/raid:${PYTHONPATH}"
 
 # ──────────────── Configurable parameters ────────────────
 DEVICE="${1:-cuda:0}"
-OVERWRITE=1
+OVERWRITE=0
 
 if [ "$#" -ge 2 ]; then
     shift
@@ -86,8 +86,7 @@ START_TIME=$(date +%s)
 for eps in "${EPSILONS[@]}"; do
     eps_str="${eps//\//_}"
     for seed in "${RANDOM_SEEDS[@]}"; do
-        SEED_OUTPUT_DIR="${OUTPUT_DIR}/ADV_seed${seed}"
-        mkdir -p "$SEED_OUTPUT_DIR"
+        SEED_DIR="${OUTPUT_DIR}_seed${seed}"
         for steps in "${STEP_COUNTS[@]}"; do
             for alpha in "${STEP_SIZES[@]}"; do
                 for held_out in "${HELD_OUT_DETECTORS[@]}"; do
@@ -101,7 +100,7 @@ for eps in "${EPSILONS[@]}"; do
                     completed=$((completed + 1))
 
                     models_str=$(build_models_str "${ENSEMBLE[@]}")
-                    expected_dir="${SEED_OUTPUT_DIR}/ELSA_TEST_${SUBSET}/adv_raw_${models_str}_${eps_str}_${steps}_${alpha}"
+                    expected_dir="${SEED_DIR}/ADV/ELSA_TEST_${SUBSET}/adv_raw_${models_str}_${eps_str}_${steps}_${alpha}"
                     if [ -f "${expected_dir}/adv_dataset.pkl" ]; then
                         skipped=$((skipped + 1))
                         echo "[$completed/$total_runs] SKIP (exists): eps=$eps steps=$steps alpha=$alpha held_out=$held_out"
@@ -123,7 +122,7 @@ for eps in "${EPSILONS[@]}"; do
                         --models "${ENSEMBLE[@]}" \
                         --device "${DEVICES[@]}" \
                         --path_to_dataset "$DATASET" \
-                        --output_dir "$SEED_OUTPUT_DIR" \
+                        --output_dir "$SEED_DIR" \
                         --batch_size $BATCH_SIZE \
                         --epsilon "$eps" \
                         --num_steps "$steps" \
