@@ -27,9 +27,7 @@ fi
 
 STEP_COUNTS=(10 20 30)
 STEP_SIZES=(0.01 0.03 0.05)
-RANDOM_START=0
-
-RANDOM_START=0
+RANDOM_START=1
 
 if [ "$RANDOM_START" -eq 1 ]; then
     RANDOM_SEEDS=(42 234 123)
@@ -88,10 +86,11 @@ START_TIME=$(date +%s)
 for eps in "${EPSILONS[@]}"; do
     eps_str="${eps//\//_}"
     for seed in "${RANDOM_SEEDS[@]}"; do
+        SEED_OUTPUT_DIR="${OUTPUT_DIR}/ADV_seed${seed}"
+        mkdir -p "$SEED_OUTPUT_DIR"
         for steps in "${STEP_COUNTS[@]}"; do
             for alpha in "${STEP_SIZES[@]}"; do
                 for held_out in "${HELD_OUT_DETECTORS[@]}"; do
-                    # Build ensemble: all detectors except held-out
                     ENSEMBLE=()
                     for det in "${ALL_DETECTORS[@]}"; do
                         if [ "$det" != "$held_out" ]; then
@@ -101,9 +100,8 @@ for eps in "${EPSILONS[@]}"; do
 
                     completed=$((completed + 1))
 
-                    # Check if output already exists
                     models_str=$(build_models_str "${ENSEMBLE[@]}")
-                    expected_dir="${OUTPUT_DIR}/ADV/ELSA_TEST_${SUBSET}/adv_raw_${models_str}_${eps_str}_${steps}_${alpha}_seed${seed}"
+                    expected_dir="${SEED_OUTPUT_DIR}/ELSA_TEST_${SUBSET}/adv_raw_${models_str}_${eps_str}_${steps}_${alpha}"
                     if [ -f "${expected_dir}/adv_dataset.pkl" ]; then
                         skipped=$((skipped + 1))
                         echo "[$completed/$total_runs] SKIP (exists): eps=$eps steps=$steps alpha=$alpha held_out=$held_out"
@@ -125,7 +123,7 @@ for eps in "${EPSILONS[@]}"; do
                         --models "${ENSEMBLE[@]}" \
                         --device "${DEVICES[@]}" \
                         --path_to_dataset "$DATASET" \
-                        --output_dir "$OUTPUT_DIR" \
+                        --output_dir "$SEED_OUTPUT_DIR" \
                         --batch_size $BATCH_SIZE \
                         --epsilon "$eps" \
                         --num_steps "$steps" \
