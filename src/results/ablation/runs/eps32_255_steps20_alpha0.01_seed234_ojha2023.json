@@ -1,0 +1,15 @@
+{
+  "epsilon": "32/255",
+  "steps": 20,
+  "alpha": 0.01,
+  "seed": 234,
+  "held_out": "ojha2023",
+  "auroc": 0.23047499999999999,
+  "f1": 0.0774487471526196,
+  "acc": 0.19,
+  "lpips": 0.17230841517448425,
+  "lpips_std": 0.10151340067386627,
+  "lpips_net": "alex",
+  "n_images": 1000,
+  "pkl_path": "/storageC/heddoubi/raid_revision/output_seed234/ADV/ELSA_TEST_200/adv_raw_['corvi2023', 'cavia2024', 'chen2024_convnext', 'chen2024_clip', 'koutlis2024', 'wang2020']_32_255_20_0.01/adv_dataset.pkl"
+}
