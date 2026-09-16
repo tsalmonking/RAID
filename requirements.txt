@@ -21,3 +21,7 @@ diffusers
 
 # AIDE
 open_clip_torch
+
+# plot
+lpips
+adjust_text
