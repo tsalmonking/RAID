@@ -1,0 +1,26 @@
+\begin{table*}[t]
+\centering
+\caption{Evaluation of our attack methodology on AIGIs from additional generators. For each detector, we report AUROC and ASR on images from 11 generative models, under the $N-$ \textit{model} ensemble attack (all models excluding the evaluated one).}
+\label{tab:external_generators}
+%\vspace{0.1cm}
+\setlength{\tabcolsep}{.6em}
+\resizebox{0.9\linewidth}{!}{
+\begin{tabular}{lcc ccc ccc ccc ccc ccc}
+\toprule
+Metric & Perturbation & & Ca24\textsuperscript{†} & Ch24C & Ch24CN & Co23\textsuperscript{†} & K24 & O23\textsuperscript{†} & W20\textsuperscript{†}\\
+\midrule
+\multirow{4}{*}{\textbf{AUROC}} 
+ & Clean   & & 0.77 & 0.74 & 0.97 & 0.99 & 0.89 & 0.96 & 0.99 \\
+ & 8/255   & & 0.46 & 0.06 & 0.43 & 0.32 & 0.09 & 0.24 & 0.46 \\
+ & 16/255  & & 0.46 & 0.02 & 0.23 & 0.20 & 0.04 & 0.15 & 0.29 \\
+ & 32/255  & & 0.40 & 0.01 & 0.19 & 0.08 & 0.02 & 0.12 & 0.06 \\
+\midrule
+\multirow{3}{*}{\textbf{ASR (\%)}} 
+ & 8/255   & & 39.5 & 91.9 & 55.5 & 67.4 & 89.5 & 75.4 & 53.5 \\
+ & 16/255  & & 39.8 & 97.1 & 75.8 & 79.9 & 95.5 & 84.6 & 70.8 \\
+ & 32/255  & & 48.2 & 98.9 & 79.9 & 91.7 & 97.4 & 87.1 & 94.4 \\
+\bottomrule
+\end{tabular}
+}
+%\vspace{-0.3cm}
+\end{table*}

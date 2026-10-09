@@ -19,6 +19,40 @@ from constants import MODELS
 
 THRESHOLD = 0.5
 
+# Post-processing applied to every image before the detector (--transform).
+# Images are (B, 3, H, W) floats in [0, 1]; the output keeps H x W, so each
+# detector still applies its own preprocessing afterwards.
+TRANSFORMS = ["none", "resize64", "crop64", "flip", "jpeg75"]
+
+
+def apply_transform(images: torch.Tensor, name: str, gen: torch.Generator) -> torch.Tensor:
+    import torch.nn.functional as F
+    from torchvision.io import decode_jpeg, encode_jpeg
+    if name == "none":
+        return images
+    h, w = images.shape[-2:]
+    if name == "resize64":  # downscale to 64x64, upscale back
+        small = F.interpolate(images, size=(64, 64), mode="bilinear", antialias=True, align_corners=False)
+        return F.interpolate(small, size=(h, w), mode="bilinear", align_corners=False).clamp(0, 1)
+    if name == "crop64":  # random 64x64 crop per image, upscaled back
+        out = []
+        for img in images:
+            top = int(torch.randint(0, h - 64 + 1, (1,), generator=gen))
+            left = int(torch.randint(0, w - 64 + 1, (1,), generator=gen))
+            crop = img[:, top:top + 64, left:left + 64].unsqueeze(0)
+            out.append(F.interpolate(crop, size=(h, w), mode="bilinear", align_corners=False))
+        return torch.cat(out).clamp(0, 1)
+    if name == "flip":  # horizontal flip with p = 0.5 per image
+        flip = torch.rand(len(images), generator=gen) < 0.5
+        out = images.clone()
+        out[flip.to(images.device)] = out[flip.to(images.device)].flip(-1)
+        return out
+    if name == "jpeg75":  # JPEG round trip at quality 75
+        u8 = (images.detach().cpu().clamp(0, 1) * 255).round().to(torch.uint8)
+        dec = [decode_jpeg(encode_jpeg(img, quality=75)) for img in u8]
+        return (torch.stack(dec).float() / 255).to(images.device)
+    raise ValueError(f"unknown transform {name}")
+
 
 @torch.no_grad()
 def main(args):
@@ -37,7 +71,7 @@ def main(args):
         output_dir = Path(
             f"{args.output_dir}/"
             f"{Path(*path_name)}{'_'+str(args.subset) if args.subset != -1 else ''}/"
-            f"{args.model}"
+            f"{args.model}{'' if args.transform == 'none' else '__' + args.transform}"
         )
 
         if (output_dir.exists()):
@@ -74,6 +108,7 @@ def main(args):
     all_logits = []
 
     metrics = {}
+    gen = torch.Generator().manual_seed(args.transform_seed)
 
     for k, v in dataloaders.items():
         predictions = []
@@ -81,6 +116,7 @@ def main(args):
         p_labels = []
         labels = []
         for idx, (images, batch_labels) in enumerate(tqdm(v, desc="Processing batches")):
+            images = apply_transform(images, args.transform, gen)
             logits_batch = model.decision_function(images)
             all_logits.extend(logits_batch.cpu().tolist())
             p_labels.extend(model.predict(images).cpu().detach())
@@ -137,6 +173,9 @@ def parse_args():
     parser.add_argument("--num_workers", type=int, default=4)
     parser.add_argument("--dry_run", action="store_true")
     parser.add_argument("--subset", type=int, default=-1, help="test subset size (-1 for full test set)")
+    parser.add_argument("--transform", choices=TRANSFORMS, default="none",
+                        help="post-processing applied to every image before the detector")
+    parser.add_argument("--transform_seed", type=int, default=0, help="seed for crop64 / flip")
 
     return parser.parse_args()
 

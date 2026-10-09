@@ -1,3 +1,4 @@
+import os
 from attacks.loss import AvgEnsembleLoss
 from torch.nn import CrossEntropyLoss
 from huggingface_hub import hf_hub_download
@@ -7,13 +8,15 @@ from models import (
     corvi2023,
     effort,
     aide,
+    d3,
+    omniaid,
+    dda,
     koutlis2024,
     ojha2023,
     wang2020,
     EnsembleModel,
     vit_lp14_dinov2,
     vit_lp14_reg_dinov2,
-    vit_lp16_siglip_384,
     vit_tp16_224_augreg_in21k,
 )
 from models.ensemble.ensemble_function import (
@@ -21,6 +24,10 @@ from models.ensemble.ensemble_function import (
     AvgEnsembleFunction,
     RandomEnsembleFunction
 )
+
+
+# Effort/AIDE/D3/OmniAID/DDA checkpoints (not on the RAID HF repo); machine-specific, see env_set.sh
+_AIGI_CKPT_DIR = os.environ.get("AIGI_CKPT_DIR", "/storageC/heddoubi/guard/external/checkpoints")
 
 
 def _get_raid_ckpt(filename):
@@ -42,8 +49,14 @@ MODELS = {
     ),
     "ojha2023": (ojha2023, _get_raid_ckpt("ojha2023/model_best.pth.tar")),
     "wang2020": (wang2020, _get_raid_ckpt("wang2020/model_best.pth.tar")),
-    "effort": (effort, "/storageC/heddoubi/guard/external/checkpoints/effort/genimage_sd14_released.pth"),
-    "aide": (aide, "/storageC/heddoubi/guard/external/checkpoints/aide/genimage_sd14_released.pth"),
+    "effort": (effort, f"{_AIGI_CKPT_DIR}/effort/genimage_sd14_released.pth"),
+    "aide": (aide, f"{_AIGI_CKPT_DIR}/aide/genimage_sd14_released.pth"),
+    "d3": (d3, f"{_AIGI_CKPT_DIR}/d3/genimage_sd14_best.pth"),
+    # OmniAID: official GenImage-SD1.4 release (HF Yunncheng/OmniAID), its MoE
+    # config json alongside. DDA: official release (HF Junwei-Xi/Dual-Data-
+    # Alignment), trained on DDA-aligned MSCOCO - no GenImage checkpoint exists.
+    "omniaid": (omniaid, f"{_AIGI_CKPT_DIR}/omniaid/genimage_sd14_released.pth"),
+    "dda": (dda, f"{_AIGI_CKPT_DIR}/dda/DDA_ckpt.pth"),
 
     "vit_lp14_dinov2": (
         vit_lp14_dinov2,
@@ -52,10 +65,6 @@ MODELS = {
     "vit_lp14_reg_dinov2": (
         vit_lp14_reg_dinov2,
         _get_raid_ckpt("pretrained_linear/dinov2_reg_retrain_d3/model_best.pth.tar")
-    ),
-    "vit_lp16_siglip_384": (
-        vit_lp16_siglip_384,
-        _get_raid_ckpt("pretrained_linear/siglip_retrain_d3/model_best.pth.tar")
     ),
     "vit_tp16_224_augreg_in21k": (
         vit_tp16_224_augreg_in21k,

@@ -1,0 +1,7 @@
+{
+  "ssim": 0.7238441109657288,
+  "ssim_std": 0.11176393926143646,
+  "kernel": "gaussian11_sigma1.5",
+  "data_range": 1.0,
+  "n_images": 1000
+}

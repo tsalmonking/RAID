@@ -13,7 +13,6 @@ if __name__ == '__main__':
                 "wang2020",
                 "vit_lp14_dinov2",
                 "vit_lp14_reg_dinov2",
-                "vit_lp16_siglip_384",
                 "vit_tp16_224_augreg_in21k",
                 "vit_tp16_224_code_augreg_in21k"])},
             ENSEMBLING_STRATEGIES['raw'](None))

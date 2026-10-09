@@ -10,9 +10,13 @@ conda activate myenv
 pip install -r requirements.txt
 ```
 
-Set the dataset path once (all scripts read from this):
+Copy `src/env_set.sh.example` to `src/env_set.sh`, fill in your machine's
+paths, and source it before running anything (all scripts read from these
+env vars):
 ```
-export TEST_PATH=/path/to/ELSA_TEST
+cp src/env_set.sh.example src/env_set.sh
+# edit src/env_set.sh
+source src/env_set.sh
 ```
 
 # Detector Training
@@ -50,43 +54,55 @@ Then run the ```train_detectors.sh``` script
 
 # Reproducing Results
 
-All scripts are in `src/` and are run from the repo root:
+All scripts are in `src/` and are run from `src/`, after `source env_set.sh`.
 
-## 1. Clean Baseline
+## 1. Attack generation
 
-```
-src/run_clean_eval.sh
-```
-
-## 2. Adversarial Attacks
+`run_experiments.sh` is the single entry point for all GPU attack generation,
+one instance per device:
 
 ```
-src/run_whitebox_attacks.sh          # white-box, eps 16/32
-src/run_leave_one_out_attacks.sh     # leave-one-out ensemble, eps 16/32
-src/run_full_ensemble_attacks.sh     # full 7-model ensemble, eps 8/16/32
+./run_experiments.sh <device> [epsilon] [step_size] [num_steps] [--mode all|ablation|experiments]
+
+# One (epsilon, device) budget, full pipeline (ablation + white-box + LOO + RAID):
+./run_experiments.sh cuda:0 8/255  0.01 --mode all
+./run_experiments.sh cuda:1 16/255 0.03 --mode all
+./run_experiments.sh cuda:2 32/255 0.03 --mode all
+
+# Just the PGD ablation sweep (step sizes x iterations x seeds) for one epsilon:
+./run_experiments.sh cuda:0 --mode ablation --epsilon 8/255
+
+# Just white-box (1000) + leave-one-out (1000) + full RAID ensemble (full dataset):
+./run_experiments.sh cuda:0 8/255 0.01 --mode experiments
 ```
 
-## 3. Evaluation
-
+Noise baselines (no GPU needed):
 ```
-src/run_evaluate_all.sh              # evaluate all detectors on all attack outputs
-python3 src/build_results_table.py   # print paper tables (default: eps 16, 32)
-python3 src/build_results_table.py 8 16 32
+python3 generate_noise.py --type all       # control (ablation) + baseline (gaussian/uniform)
 ```
 
-## 4. PGD Ablation
+## 2. Evaluation and metrics
+
+`compute_metrics.py` evaluates detectors and (for ablation) computes LPIPS/ASR
+and rebuilds the results CSV:
 
 ```
-src/run_ablation_attacks.sh          # LOO sweep: step sizes x iterations x epsilons
-src/run_ablation_noise.sh            # Gaussian + uniform noise baselines
+python3 compute_metrics.py --mode clean       --device cuda:0   # detectors on the unattacked test set
+python3 compute_metrics.py --mode experiments --device cuda:0   # detectors on white-box/LOO/RAID outputs
+python3 compute_metrics.py --mode ablation    --device cuda:0   # AUROC + LPIPS + ASR for the ablation grid
+python3 compute_metrics.py --mode all         --device cuda:0   # all three, in order
 ```
 
-Edit `DEVICE` and `HELD_OUT_DETECTORS` at the top of `run_ablation_attacks.sh` to split across GPUs.
+```
+python3 build_results_table.py       # print paper tables (default: eps 16, 32)
+python3 build_results_table.py 8 16 32
+python3 plot_auroc_vs_lpips.py       # AUROC/ASR vs LPIPS figures for the ablation grid
+```
 
 # Evaluating and Attacking a Detector
 
 ## Running the attack
-- `run_attack.sh`: Run the ensemble attack and evaluate the provided model on adversarial examples. Optionally saves adversarial examples for dataset creation.
+- `raid/attack_generate.py`: Run the ensemble attack and evaluate the provided model on adversarial examples. Optionally saves adversarial examples for dataset creation. `run_experiments.sh` wraps this for the standard white-box/LOO/RAID/ablation runs.
 
 ```
   --generate                  saves the adversarial dataset at the provided output_dir        
@@ -123,16 +139,15 @@ Edit `DEVICE` and `HELD_OUT_DETECTORS` at the top of `run_ablation_attacks.sh` t
 - `raid/models/` — wrapped detectors
 - `raid/attack_generate.py` — run adversarial attack and generate dataset
 - `raid/evaluate_detector.py` — evaluate detector on a dataset
-- `raid/generate_noise_baseline.py` — Gaussian/uniform noise baselines
+- `raid/generate_noise_baseline.py` — Gaussian/uniform noise baselines (CLI helper, wrapped by `generate_noise.py`)
 - `external/` — third-party detector code
+- `env_set.sh.example` — template for machine-specific paths; copy to `env_set.sh` (gitignored) and source it
+- `run_experiments.sh` — single entry point for GPU attack generation: PGD ablation sweep, white-box, leave-one-out, full RAID ensemble
+- `generate_noise.py` — noise-control (ablation) and noise-baseline (gaussian/uniform) generation
+- `compute_metrics.py` — evaluate detectors (clean / experiments / ablation modes) and compute AUROC + LPIPS + ASR
 - `build_results_table.py` — aggregate results into paper tables
-- `run_clean_eval.sh` — clean baseline evaluation
-- `run_whitebox_attacks.sh` — white-box attacks
-- `run_leave_one_out_attacks.sh` — leave-one-out ensemble attacks
-- `run_full_ensemble_attacks.sh` — full 7-model ensemble attacks
-- `run_evaluate_all.sh` — evaluate all detectors on all attack outputs
-- `run_ablation_attacks.sh` — PGD hyperparameter ablation sweep
-- `run_ablation_noise.sh` — noise baselines for ablation
+- `plot_auroc_vs_lpips.py` — AUROC/ASR vs LPIPS figures for the ablation grid
+- `train_detectors.sh` — train the 7 detectors on ELSA D3
 
 # Detector Categorization
 

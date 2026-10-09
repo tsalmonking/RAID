@@ -12,7 +12,9 @@ import numpy as np
 
 
 def main(args):
-    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+    device = torch.device(args.device if torch.cuda.is_available() else "cpu")
+    if device.type == "cuda":
+        torch.cuda.set_device(device)
     pprint.pp(vars(args))
 
     if torch.cuda.is_available():
@@ -71,6 +73,7 @@ def parse_args():
     parser.add_argument("--path_to_dataset", help="Directory containing the normal dataset")
     parser.add_argument("--path_to_adv_dataset", help="Directory containing the adversarial dataset")
     parser.add_argument("--batch_size", type=int, default=10, help="Batch size for data loader")
+    parser.add_argument("--device", type=str, default="cuda:0", help="Device, e.g. cuda:1")
     parser.add_argument("--dry_run", action="store_true")
 
     return parser.parse_args()

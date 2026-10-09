@@ -1,0 +1,35 @@
+#!/bin/bash
+# Machine-specific environment for all RAID scripts. Copy to env_set.sh and
+# fill in real paths; env_set.sh is gitignored so paths never land in git.
+#
+# Source before running anything:
+#   source env_set.sh
+#   ./run_experiments.sh cuda:0 8/255 0.01 --mode experiments &
+#   python src/compute_metrics.py --mode clean --device cuda:1
+RAID_SRC="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+RAID_ROOT="$(dirname "${RAID_SRC}")"
+
+# ── Required ──
+export TEST_PATH=/path/to/ELSA_TEST          # clean dataset (e.g. ELSA_TEST with real/ sd_14/ sd_21/ ...)
+export OUTPUT_DIR=/path/to/output            # where adversarial datasets (.pkl) are written, e.g. on a large scratch disk
+
+# Git-tracked: results.json/lpips sidecars and the ablation CSV are meant to
+# be committed and synced across machines (see compute_metrics.py) - kept at
+# the repo root (sibling of src/), not inside src/.
+export EVAL_OUTPUT_DIR="${RAID_ROOT}/results/evaluate_detector"
+export RESULTS_DIR="${RAID_ROOT}/results/ablation"
+
+# ── Required for run_experiments.sh --mode additional_generators ──
+export ADDGEN_SRC=/path/to/tar_outputs       # one subfolder per external generator
+# export ADDGEN_PATH=$(dirname "$TEST_PATH")/EXTERNAL_GEN   # symlinked dataset dir (created)
+
+# Effort / AIDE / D3 checkpoints: <dir>/{effort,aide}/genimage_sd14_released.pth,
+# <dir>/d3/genimage_sd14_best.pth
+export AIGI_CKPT_DIR=/path/to/AIGI_checkpoints
+
+# ── Optional (defaults shown) ──
+# export BATCH_SIZE=8
+# export NUM_WORKERS=4
+# export WHITEBOX_SUBSET=1000
+# export LOO_SUBSET=1000
+# export RAID_SUBSET=-1
