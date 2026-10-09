@@ -146,7 +146,7 @@ def relocate_result(natural_path: Path, target_path: Path) -> None:
 def build_results_json_path(eval_output_dir: str, output_dir: str, pkl: Path, model: str) -> Path:
     """Our flattened target location: pkl's directory relative to
     dirname(output_dir), e.g. output_seed42/ADV/ELSA_TEST_200/adv_raw_[...]/
-    - drops the machine-specific absolute prefix (e.g. /disk4/heddoubi/RAID),
+    - drops the machine-specific absolute prefix (the parent of $OUTPUT_DIR),
     keeps the meaningful output[_seed{N}]/... part."""
     adv_root = Path(output_dir).parent
     rel = pkl.parent.relative_to(adv_root)
