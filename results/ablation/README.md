@@ -20,7 +20,7 @@ ablation/
 
 Two machines each generate adversarial pkls for different epsilon budgets and compute
 metrics locally. Only this `results/ablation/` tree is committed and synced via git.
-The pkl files live under `/storageC/` and are never committed.
+The pkl files live under `$OUTPUT_DIR` and are never committed.
 
 After a `git pull` from the other machine, rebuild the merged CSV:
 
@@ -49,7 +49,7 @@ that one run, plus metadata:
   "lpips_std": 0.042,
   "lpips_net": "alex",
   "n_images": 1000,
-  "pkl_path": "/storageC/..."
+  "pkl_path": ""
 }
 ```
 

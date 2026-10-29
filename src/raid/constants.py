@@ -27,7 +27,7 @@ from models.ensemble.ensemble_function import (
 
 
 # Effort/AIDE/D3/OmniAID/DDA checkpoints (not on the RAID HF repo); machine-specific, see env_set.sh
-_AIGI_CKPT_DIR = os.environ.get("AIGI_CKPT_DIR", "/storageC/heddoubi/guard/external/checkpoints")
+_AIGI_CKPT_DIR = os.environ["AIGI_CKPT_DIR"]
 
 
 def _get_raid_ckpt(filename):

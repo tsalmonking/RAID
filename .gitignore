@@ -190,3 +190,5 @@ src/env_set.sh
 # Local only (paper lives in Overleaf; notes kept in local archive)
 /paper/
 /CLAUDE.md
+
+env.lock.txt
