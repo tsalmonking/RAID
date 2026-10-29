@@ -192,3 +192,4 @@ src/env_set.sh
 /CLAUDE.md
 
 env.lock.txt
+results/
