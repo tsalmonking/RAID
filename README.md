@@ -21,6 +21,8 @@ source src/env_set.sh
 
 # Detector Training
 
+If you want to use the available pretrained models, you can directly skip to the next [step](#evaluating-and-attacking-a-detector): the checkpoints, stored in [this HuggingFace repository](https://huggingface.co/aimagelab/RAID_ckpt), will be automatically downloaded.
+
 ## Dataset Setup
 
 First, create a directory `data` in the project root folder and download the [ELSA D3 dataset](https://huggingface.co/datasets/elsaEU/ELSA_D3) (or a subset):
@@ -50,7 +52,29 @@ data
             |      .
 ``` 
 
-Then run the ```train_detectors.sh``` script
+## Training
+The ```train_detectors.sh``` file contains all the training scripts to be launched.
+You need to uncomment the lines corresponding to the detectors you want to train before launching it.
+Additionally, to use the new generated checkpoints, you have to modify the `constants.py` file to have,
+for each model inside the `MODELS` dictionary, the respective checkpoint path.
+
+# Evaluating and attacking a detector
+Download the RAID dataset from the following [link](https://huggingface.co/datasets/aimagelab/RAID) and check that the structure matches the one below:
+
+```
+data
+└── RAID					
+      ├── original
+            ├── real
+            ├── gen_0
+            |      .
+            |      .
+      │── epsilon32   	
+            │── real
+            ├── gen_0
+            |      .
+            |      .
+```
 
 # Reproducing Results
 
@@ -176,3 +200,21 @@ Wang2020 | [CNN-generated images are surprisingly easy to spot...for now](https:
 The provided MIT License only applies to the `raid` directory. The code
 contained in the `external` folder, provided by third-parties and modified in
 some parts, has its own licenses that are included in each subfolder.
+
+# Acknowledgements
+This research has been partially supported by the Horizon Europe projects [ELSA](https://elsa-ai.eu) (GA no. 101070617), [Sec4AI4Sec](https://www.sec4ai4sec-project.eu) (GA no. 101120393), and [CoEvolution](https://coevolution-project.eu/) (GA no. 101168560); and by [SERICS](https://serics.eu/) (PE00000014) and [FAIR](https://fondazione-fair.it/en/) (PE00000013) under the MUR NRRP funded by the EU-NGEU.
+We also acknowledge the CINECA award under the ISCRA initiative, for the availability of high-performance computing resources and support.
+
+<p align="center">
+    <img src="imgs/FundedbytheEU.png" alt="Funded by EU" style="height:80px; vertical-align: middle;"/> &nbsp;&nbsp;
+    <img src="imgs/elsa.jpg" alt="ELSA" style="height:80px; vertical-align: middle;"/> &nbsp;&nbsp;
+    <img src="imgs/sec4AI4sec.png" alt="Sec4AI4Sec" style="height:80px; vertical-align: middle;"/>
+</p>
+<br>
+<p align="center">
+    <img src="imgs/CoEvolution_Logo.svg" alt="CoEvolution" style="height:80px; vertical-align: middle;"/> &nbsp;&nbsp;
+    <img src="imgs/SERICS.png" alt="SERICS" style="height:80px; vertical-align: middle;"/>
+</p>
+<p align="center">
+    <img src="imgs/SAFER_Logo.png" alt="SAFER" style="height:160px;  vertical-align: middle;"/>
+</p>
