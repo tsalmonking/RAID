@@ -78,49 +78,59 @@ data
 
 # Reproducing Results
 
-All scripts are in `src/` and are run from `src/`, after `source env_set.sh`.
+All commands are run from the repository root, after `source src/env_set.sh`.
 
 ## 1. Attack generation
 
-`run_experiments.sh` is the single entry point for all GPU attack generation,
+`src/run_experiments.sh` is the single entry point for all GPU attack generation,
 one instance per device:
 
 ```
-./run_experiments.sh <device> [epsilon] [step_size] [num_steps] [--mode all|ablation|experiments]
+./src/run_experiments.sh <device> [epsilon] [step_size] [num_steps] [--mode all|ablation|experiments]
 
 # One (epsilon, device) budget, full pipeline (ablation + white-box + LOO + RAID):
-./run_experiments.sh cuda:0 8/255  0.01 --mode all
-./run_experiments.sh cuda:1 16/255 0.03 --mode all
-./run_experiments.sh cuda:2 32/255 0.03 --mode all
+./src/run_experiments.sh cuda:0 8/255  0.01 --mode all
+./src/run_experiments.sh cuda:1 16/255 0.03 --mode all
+./src/run_experiments.sh cuda:2 32/255 0.03 --mode all
 
 # Just the PGD ablation sweep (step sizes x iterations x seeds) for one epsilon:
-./run_experiments.sh cuda:0 --mode ablation --epsilon 8/255
+./src/run_experiments.sh cuda:0 --mode ablation --epsilon 8/255
 
 # Just white-box (1000) + leave-one-out (1000) + full RAID ensemble (full dataset):
-./run_experiments.sh cuda:0 8/255 0.01 --mode experiments
+./src/run_experiments.sh cuda:0 8/255 0.01 --mode experiments
 ```
+
+Each run writes the adversarial images as tensors to `adv_dataset.pkl`. To export them as PNGs
+(one folder per class, `<name>_adv.png`):
+```
+python3 src/raid/scripts/generate_image_dataset.py \
+    --path_to_dataset $TEST_PATH \
+    --path_to_adv_dataset <adv dir>/adv_dataset.pkl \
+    [--output_dir <dir>] [--device cpu]
+```
+PNGs are saved to `<adv dir>/IMAGE_DATASET/` unless `--output_dir` is given.
 
 Noise baselines (no GPU needed):
 ```
-python3 generate_noise.py --type all       # control (ablation) + baseline (gaussian/uniform)
+python3 src/generate_noise.py --type all       # control (ablation) + baseline (gaussian/uniform)
 ```
 
 ## 2. Evaluation and metrics
 
-`compute_metrics.py` evaluates detectors and (for ablation) computes LPIPS/ASR
+`src/compute_metrics.py` evaluates detectors and (for ablation) computes LPIPS/ASR
 and rebuilds the results CSV:
 
 ```
-python3 compute_metrics.py --mode clean       --device cuda:0   # detectors on the unattacked test set
-python3 compute_metrics.py --mode experiments --device cuda:0   # detectors on white-box/LOO/RAID outputs
-python3 compute_metrics.py --mode ablation    --device cuda:0   # AUROC + LPIPS + ASR for the ablation grid
-python3 compute_metrics.py --mode all         --device cuda:0   # all three, in order
+python3 src/compute_metrics.py --mode clean       --device cuda:0   # detectors on the unattacked test set
+python3 src/compute_metrics.py --mode experiments --device cuda:0   # detectors on white-box/LOO/RAID outputs
+python3 src/compute_metrics.py --mode ablation    --device cuda:0   # AUROC + LPIPS + ASR for the ablation grid
+python3 src/compute_metrics.py --mode all         --device cuda:0   # all three, in order
 ```
 
 ```
-python3 build_results_table.py       # print paper tables (default: eps 16, 32)
-python3 build_results_table.py 8 16 32
-python3 plot_auroc_vs_lpips.py       # AUROC/ASR vs LPIPS figures for the ablation grid
+python3 src/build_results_table.py       # print paper tables (default: eps 16, 32)
+python3 src/build_results_table.py 8 16 32
+python3 src/plot_auroc_vs_lpips.py       # AUROC/ASR vs LPIPS figures for the ablation grid
 ```
 
 # Attack and Evaluation Scripts
@@ -163,6 +173,7 @@ python3 plot_auroc_vs_lpips.py       # AUROC/ASR vs LPIPS figures for the ablati
 - `raid/models/` — wrapped detectors
 - `raid/attack_generate.py` — run adversarial attack and generate dataset
 - `raid/evaluate_detector.py` — evaluate detector on a dataset
+- `raid/scripts/generate_image_dataset.py` — export an `adv_dataset.pkl` to PNGs
 - `raid/generate_noise_baseline.py` — Gaussian/uniform noise baselines (CLI helper, wrapped by `generate_noise.py`)
 - `external/` — third-party detector code
 - `env_set.sh.example` — template for machine-specific paths; copy to `env_set.sh` (gitignored) and source it
