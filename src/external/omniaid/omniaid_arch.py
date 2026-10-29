@@ -1,6 +1,5 @@
 """OmniAID (Cheng et al., ICML 2026) arch — vendored from yunncheng/OmniAID
-(reward/omniaid.py, the self-contained inference variant; MIT per the
-upstream README, which ships no LICENSE file).
+(reward/omniaid.py, the self-contained inference variant; MIT, see LICENSE).
 
 CLIP ViT-L/14@336 with an SVD mixture-of-experts on every self_attn
 projection: frozen weight_main + per-expert rank-r residuals, routed
