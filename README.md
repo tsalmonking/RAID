@@ -123,7 +123,7 @@ python3 build_results_table.py 8 16 32
 python3 plot_auroc_vs_lpips.py       # AUROC/ASR vs LPIPS figures for the ablation grid
 ```
 
-# Evaluating and Attacking a Detector
+# Attack and Evaluation Scripts
 
 ## Running the attack
 - `raid/attack_generate.py`: Run the ensemble attack and evaluate the provided model on adversarial examples. Optionally saves adversarial examples for dataset creation. `run_experiments.sh` wraps this for the standard white-box/LOO/RAID/ablation runs.
@@ -185,7 +185,7 @@ Chen2024 (CLIP) | DRCT contrastive training | CLIP ViT-L/14 | DRCT-2M | ImageNet
 Koutlis2024 | CLIP intermediate blocks + projection | CLIP ViT-B/16 + linear | ForenSynths, Ojha, Tan | CLIP normalize + CenterCrop 224
 Wang2020 | ResNet50 binary classifier | ResNet50 | ForenSynths | ImageNet normalize
 
-# Reference Papers
+# Detectors and Reference Papers
 
 Detector | Paper | Repository
 --- | --- | ---
