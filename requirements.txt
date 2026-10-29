@@ -25,6 +25,5 @@ open_clip_torch
 # plot
 lpips
 torchmetrics
-adjust_text
+adjustText
 pyssim
-torchmetrics
